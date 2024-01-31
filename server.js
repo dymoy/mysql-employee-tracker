@@ -69,7 +69,9 @@ async function promptUser() {
  * Query 'department' data and present a table with department names and department ids
  */ 
 function getDepartments() {
-    db.query('SELECT * FROM department', (err, res) => {
+    const query = `SELECT * FROM department`;
+
+    db.query(query, (err, res) => {
         err ? console.log(err) : console.table(res);
         console.log('\n');
         promptUser();
@@ -98,7 +100,7 @@ function getRoles() {
 
 /**
  * @function getEmployees
- * Queries employee data - including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+ * Query 'employee' data and present a table including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
  */
 function getEmployees() {
     const query = 
@@ -125,6 +127,28 @@ function getEmployees() {
  * 
  */
 function addDepartment() {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'request',
+            message: 'What is the name of the department you would like to add?',
+        }
+    ]).then((answer) => {
+        var reqName = answer.request;
 
+        const query = 
+        `
+            INSERT INTO department (name)
+            VALUES ('${reqName}')
+        `;
+        
+        db.query(query, (err, res) => {
+            err ? console.log(err) : console.log(`And... done! The '${reqName}' department was added to the database!`);
+            console.log('\n');
+            promptUser();
+        });
+        
+    })
 }
+
 promptUser();
