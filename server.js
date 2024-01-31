@@ -36,12 +36,14 @@ const questions = [
     },
 ];
 
-/* Create a function to initialize app */
-function init() {
-    // Prompt the user with the questions and then write data to 'logo.svg'
-    inquirer.prompt(questions)
+/**
+ * @function promptUser
+ * Asynchronous function that will prompt the user for the desired action in employee_tracker_db
+ */
+async function promptUser() {
+    await inquirer.prompt(questions)
     .then((answer) => {
-        switch (answer.text) {
+        switch (answer.request) {
             case 'View all departments':
                 getDepartments();
                 break;
@@ -63,9 +65,9 @@ function init() {
  */ 
 function getDepartments() {
     db.query('SELECT * FROM department', (err, res) => {
-        err 
-        ? console.log(err)
-        : console.table(res)
+        err ? console.log(err) : console.table(res);
+        console.log('\n');
+        promptUser();
     });
 }
 
@@ -75,9 +77,9 @@ function getDepartments() {
  */
 function getRoles() {
     db.query('SELECT * FROM role', (err, res) => {
-        err
-        ? console.log(err)
-        : console.table(res);
+        err ? console.log(err) : console.table(res);
+        console.log('\n');
+        promptUser();
     });
 }
 
@@ -87,10 +89,10 @@ function getRoles() {
  */
 function getEmployees() {
     db.query('SELECT * FROM employee', (err, res) => {
-        err
-        ? console.log(err)
-        : console.table(res)
+        err ? console.log(err) : console.table(res);
+        console.log('\n');
+        promptUser();
     });
 }
 
-init();
+promptUser();
