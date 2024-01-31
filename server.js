@@ -322,8 +322,8 @@ function employeePrompt(res) {
                 VALUES (
                     '${first}',
                     '${last}',
-                    '${targetRole.id}',
-                    '${manager}'
+                    ${targetRole.id},
+                    ${manager}
                 )
             `;
 
