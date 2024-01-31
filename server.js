@@ -53,6 +53,9 @@ async function promptUser() {
             case 'View all employees':
                 getEmployees();
                 break;
+            case 'Add a department':
+                addDepartment();
+                break;
             case 'Exit':
                 return;
         }
@@ -88,11 +91,29 @@ function getRoles() {
  * Queries all data from the 'employee' table in the employee_tracker_db
  */
 function getEmployees() {
-    db.query('SELECT * FROM employee', (err, res) => {
+    const query = 
+    `SELECT e.id, e.first_name, e.last_name, r.title AS job_title, d.name AS department, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+    FROM employee e
+    JOIN role r 
+    ON e.role_id = r.id
+    JOIN department d
+    ON r.department_id = d.id
+    LEFT JOIN employee m
+    ON m.id = e.manager_id
+    `;
+
+    db.query(query, (err, res) => {
         err ? console.log(err) : console.table(res);
         console.log('\n');
         promptUser();
     });
 }
 
+/**
+ * @function addDepartment
+ * 
+ */
+function addDepartment() {
+
+}
 promptUser();
