@@ -56,6 +56,9 @@ async function promptUser() {
             case 'Add a department':
                 addDepartment();
                 break;
+            case 'Add a role':
+                addRole();
+                break;
             case 'Exit':
                 db.end();
                 console.info('Closing connection with the database... Done! Goodbye.');
@@ -103,6 +106,12 @@ function getRoles() {
  * Query 'employee' data and present a table including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
  */
 function getEmployees() {
+    /**
+     * Build the query to join the 'employee', 'role', and 'department' tables where: 
+     * employee.role_id = role.id
+     * role.department_id = department.id
+     * manager.id = employee.manager_id
+     */
     const query = 
     `
         SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
@@ -124,31 +133,100 @@ function getEmployees() {
 
 /**
  * @function addDepartment
- * 
+ * Prompts the user for the name of the department they're adding, then sends a query to add the item in the 'department' table
  */
 function addDepartment() {
+    // Use inquirer to prompt the user for the requested department name
     inquirer.prompt([
         {
             type: 'input',
-            name: 'request',
+            name: 'name',
             message: 'What is the name of the department you would like to add?',
         }
     ]).then((answer) => {
-        var reqName = answer.request;
+        var reqName = answer.name;
 
+        // Build the query using the inquirer answer provided 
         const query = 
         `
             INSERT INTO department (name)
             VALUES ('${reqName}')
         `;
         
+        // Run the query to add the name into the 'department' table
         db.query(query, (err, res) => {
             err ? console.log(err) : console.log(`And... done! The '${reqName}' department was added to the database!`);
             console.log('\n');
             promptUser();
         });
+    });
+}
+
+/**
+ * @function addRole
+ * Retrieves the names and ids of the existing departments in the database for rolePrompt() to use with inquirer
+ * @see rolePrompt
+ */
+function addRole() {
+    const deptQuery = `SELECT * FROM department`; 
+
+    db.query(deptQuery, (err, res) => {
+        rolePrompt(res);
+    });
+}
+
+/**
+ * @function rolePrompt
+ * Prompts the user to enter the name, salary, and department for the role. The role is then added to the database
+ * @param {*} res - the array objects containing all department name and ids 
+ */
+function rolePrompt(res) {
+    // Get an array of department names for inquirer
+    const deptChoices = res.map(dept => dept.name);
+    
+    // Use inquirer to prompt the user for name, salary, and department for the role 
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'title',
+            message: 'What is the name of the role you would like to add?',
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: 'Okay! What is the salary for this role?',
+        },
+        {
+            type: 'list',
+            name: 'department',
+            message: 'Great! Now, which department does this role belong to?',
+            choices: deptChoices
+        },
+    ]).then((answer) => {
+        // Destructure the answers provided to inquirer
+        var { title, salary, department} = answer;
         
-    })
+        // Obtain the department_id using the res paramater
+        const departmentObj = res.find(dept => {
+            if (dept.name == department) {
+                return dept;
+            }
+        });
+
+        // Build the query using the inquirer answer provided 
+        const query = 
+        `
+            INSERT INTO role (title, salary, department_id)
+            VALUES ('${title}', '${salary}', '${departmentObj.id}')
+        `;
+        
+        // Run the query to add the name into the 'role' table
+        db.query(query, (err, res) => {
+            err ? console.log(err) : console.log(`And... done! The '${title}' role was added to the database!`);
+            console.log('\n');
+            promptUser();
+        });
+    });
 }
 
 promptUser();
