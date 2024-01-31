@@ -59,6 +59,9 @@ async function promptUser() {
             case 'Add a role':
                 addRole();
                 break;
+            case 'Add an employee':
+                addEmployee();
+                break;
             case 'Exit':
                 db.end();
                 console.info('Closing connection with the database... Done! Goodbye.');
@@ -171,6 +174,7 @@ function addRole() {
     const deptQuery = `SELECT * FROM department`; 
 
     db.query(deptQuery, (err, res) => {
+        if (err) throw err;
         rolePrompt(res);
     });
 }
@@ -178,7 +182,7 @@ function addRole() {
 /**
  * @function rolePrompt
  * Prompts the user to enter the name, salary, and department for the role. The role is then added to the database
- * @param {*} res - the array objects containing all department name and ids 
+ * @param {*} res - the array of objects containing all 'department' name and ids 
  */
 function rolePrompt(res) {
     // Get an array of department names for inquirer
@@ -217,14 +221,118 @@ function rolePrompt(res) {
         const query = 
         `
             INSERT INTO role (title, salary, department_id)
-            VALUES ('${title}', '${salary}', '${departmentObj.id}')
+            VALUES (
+                '${title}', 
+                '${salary}', 
+                '${departmentObj.id}'
+            )
         `;
         
-        // Run the query to add the name into the 'role' table
+        // Run the query to add the role into the 'role' table
         db.query(query, (err, res) => {
             err ? console.log(err) : console.log(`And... done! The '${title}' role was added to the database!`);
             console.log('\n');
             promptUser();
+        });
+    });
+}
+
+/**
+ * @function addEmployee
+ * 
+ */
+function addEmployee() {
+    const roleQuery = `SELECT * FROM role`;
+
+    db.query(roleQuery, (err, res) => {
+        if (err) throw err;
+        employeePrompt(res);
+    });
+}
+
+/**
+ * @function employeePrompt
+ * Prompts the user to enter the employee’s first name, last name, role, and manager. The employee is then added to the database
+ * @param {*} res - the array of objects containing all 'role' data
+ */
+function employeePrompt(res) {
+    const roleChoices = res.map((role => role.title));
+
+    const managerQuery = 
+    `SELECT id, CONCAT(first_name, ' ', last_name) as name
+     FROM employee`;
+
+    db.query(managerQuery, (err, result) => {
+        if (err) throw err;
+
+        // Get an array of employee names that can be potential managers, then push a "null" option
+        var managerChoices = result.map((manager => manager.name));
+        managerChoices.push('None');
+
+        inquirer.prompt([
+            {
+                type: 'input',
+                name: 'first',
+                message: 'What is the first name of the employee you want to add?',
+            },
+            {
+                type: 'input',
+                name: 'last',
+                message: 'And their last name?',
+            },
+            {
+                type: 'list',
+                name: 'role',
+                message: 'Great! Now, choose from the list below what their role will be!',
+                choices: roleChoices
+            },
+            {
+                type: 'list',
+                name: 'manager',
+                message: 'Sounds good. Does this employee have a manager? Choose from the list below.',
+                choices: managerChoices
+            }
+        ]).then(answer => {
+            // Destructure the answers provided to inquirer 
+            var {first, last, role, manager} = answer;
+
+            // Find the requested role to retrieve the role id 
+            const targetRole = res.find(roleObj => {
+                if (roleObj.title == role) {
+                    return roleObj;
+                }
+            });
+            
+            // Find the requested manager to retrieve the manager employee id
+            if (manager == 'None') {
+                manager = null;
+            } else {
+                manager = result.find(employee => {
+                    if (employee.name == manager) {
+                        return employee;
+                    }
+                });
+                manager = manager.id;
+            }
+
+            // Build the query using the inquirer answer provided 
+            var query = 
+            `
+                INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                VALUES (
+                    '${first}',
+                    '${last}',
+                    '${targetRole.id}',
+                    '${manager}'
+                )
+            `;
+
+            // Run the query to add the new employee into the 'employee' table
+            db.query(query, (err, res) => {
+                err ? console.log(err) : console.log(`And... done! The employee '${first} ${last}' was added to the database!`);
+                console.log('\n');
+                promptUser();
+            });
         });
     });
 }
