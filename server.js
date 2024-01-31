@@ -57,14 +57,16 @@ async function promptUser() {
                 addDepartment();
                 break;
             case 'Exit':
-                return;
+                db.end();
+                console.info('Closing connection with the database... Done! Goodbye.');
+                break;
         }
     });
 }
 
 /**
  * @function getDepartments
- * Queries all data from the 'department' table in the employee_tracker_db
+ * Query 'department' data and present a table with department names and department ids
  */ 
 function getDepartments() {
     db.query('SELECT * FROM department', (err, res) => {
@@ -76,10 +78,18 @@ function getDepartments() {
 
 /**
  * @function getRoles
- * Queries all data from the 'role' table in the employee_tracker_db
+ * Query 'role' data and present a table with the job title, role id, the department that role belongs to, and the salary for that role
  */
 function getRoles() {
-    db.query('SELECT * FROM role', (err, res) => {
+    const query = 
+    `
+        SELECT r.id, r.title, d.name AS department, r.salary
+        FROM role r 
+        JOIN department d 
+        ON r.department_id = d.id
+    `;
+
+    db.query(query, (err, res) => {
         err ? console.log(err) : console.table(res);
         console.log('\n');
         promptUser();
@@ -88,18 +98,19 @@ function getRoles() {
 
 /**
  * @function getEmployees
- * Queries all data from the 'employee' table in the employee_tracker_db
+ * Queries employee data - including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
  */
 function getEmployees() {
     const query = 
-    `SELECT e.id, e.first_name, e.last_name, r.title AS job_title, d.name AS department, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
-    FROM employee e
-    JOIN role r 
-    ON e.role_id = r.id
-    JOIN department d
-    ON r.department_id = d.id
-    LEFT JOIN employee m
-    ON m.id = e.manager_id
+    `
+        SELECT e.id, e.first_name, e.last_name, r.title, d.name AS department, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+        FROM employee e
+        JOIN role r 
+        ON e.role_id = r.id
+        JOIN department d
+        ON r.department_id = d.id
+        LEFT JOIN employee m
+        ON m.id = e.manager_id
     `;
 
     db.query(query, (err, res) => {
