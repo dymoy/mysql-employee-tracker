@@ -1,9 +1,9 @@
 -- Drops the employees_db database 
-DROP DATABASE IF EXISTS employees_db;
-CREATE DATABASE employees_db;
+DROP DATABASE IF EXISTS employee_tracker_db;
+CREATE DATABASE employee_tracker_db;
 
 -- Uses the employees_db database 
-USE employees_db;
+USE employee_tracker_db;
 
 -- Creates the table "departments" within employees_db
 CREATE TABLE department (
