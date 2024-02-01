@@ -1,6 +1,7 @@
 /* Include packages needed for this application */
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
+require('console.table');
 
 /* Use mysql to create a connection with the database 'employee_tracker_db' */
 const db = mysql.createConnection(
@@ -10,7 +11,10 @@ const db = mysql.createConnection(
         password: 'mysql123',
         database: 'employee_tracker_db'
     },
-    console.log("Welcome to the MySQL Employee Tracker Database!")
+    console.log(
+    `===================================================================
+========= Welcome to the MySQL Employee Tracker Database! =========
+===================================================================\n`)
 );
 
 /** 
@@ -41,10 +45,9 @@ const menuOptions = [
  * Asynchronous function that will prompt the user for the desired action in employee_tracker_db
  */
 async function promptUser() {
-    console.log('\n');
-
     await inquirer.prompt(menuOptions)
     .then((answer) => {
+        console.log('\n');
         switch (answer.request) {
             case 'View all departments':
                 viewDepartments();
@@ -169,7 +172,7 @@ function addDepartment() {
         // Run the query to add the name into the 'department' table and notify the user it was completed
         db.query(query, (err, data) => {
             if (err) throw err;
-            console.log(`And... done! The '${deptName}' department was added to the database!`);
+            console.log(`\nAnd... done! The '${deptName}' department was added to the database!\n`);
             promptUser();
         });
     });
@@ -232,7 +235,7 @@ function addRole() {
             // Run the query to add the role into the 'role' table
             db.query(query, (err, data) => {
                 if (err) throw err;
-                console.log(`And... done! The '${title}' role was added to the database!`);
+                console.log(`\nAnd... done! The '${title}' role was added to the database!\n`);
                 promptUser();
             });
         });
@@ -326,7 +329,7 @@ function addEmployee() {
                 // Run the query to add the new employee into the 'employee' table
                 db.query(query, (err, data) => {
                     if (err) throw err;
-                    console.log(`And... done! The employee '${first} ${last}' was added to the database!`);
+                    console.log(`\nAnd... done! The employee '${first} ${last}' was added to the database!\n`);
                     promptUser();
                 });
             });
@@ -395,7 +398,7 @@ function updateEmployeeRole() {
                 // Run the query to update the role_id of the employee with employee_id
                 db.query(query, (err, data) => {
                     if (err) throw err;
-                    console.log(`And... done! The role for the employee '${answer.employee}' was changed to '${answer.role}'!`);
+                    console.log(`\nAnd... done! The role for the employee '${answer.employee}' was changed to '${answer.role}'!\n`);
                     promptUser();
                 });
             });
