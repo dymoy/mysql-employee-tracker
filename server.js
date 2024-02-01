@@ -2,7 +2,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 
-/* Use mysql to create connection with database */
+/* Use mysql to create a connection with the database 'employee_tracker_db' */
 const db = mysql.createConnection(
     {
         host: 'localhost',
@@ -14,10 +14,10 @@ const db = mysql.createConnection(
 );
 
 /** 
- * Create an array of questions for inquirer and include the following choices: 
+ * Create an array of menu options for inquirer and include the following choices: 
  * View all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
  */ 
-const questions = [
+const menuOptions = [
     {
         type: 'list',
         name: 'request',
@@ -41,17 +41,19 @@ const questions = [
  * Asynchronous function that will prompt the user for the desired action in employee_tracker_db
  */
 async function promptUser() {
-    await inquirer.prompt(questions)
+    console.log('\n');
+
+    await inquirer.prompt(menuOptions)
     .then((answer) => {
         switch (answer.request) {
             case 'View all departments':
-                getDepartments();
+                viewDepartments();
                 break;
             case 'View all roles':
-                getRoles();
+                viewRoles();
                 break;
             case 'View all employees':
-                getEmployees();
+                viewEmployees();
                 break;
             case 'Add a department':
                 addDepartment();
@@ -67,31 +69,35 @@ async function promptUser() {
                 break;
             case 'Exit':
                 db.end();
-                console.info('Closing connection with the database... Done! Goodbye.');
+                console.info('Closing connection with the database... Done! Goodbye\n');
                 break;
         }
     });
 }
 
 /**
- * @function getDepartments
+ * @function viewDepartments
  * Query 'department' data and present a table with department names and department ids
  */ 
-function getDepartments() {
+function viewDepartments() {
     const query = `SELECT * FROM department`;
 
+    // Query the db for department data
     db.query(query, (err, res) => {
-        err ? console.log(err) : console.table(res);
-        console.log('\n');
+        if (err) throw err;
+
+        // Present the data to the user as a table, then prompt the user again for a desired action in the db
+        console.table(res);
         promptUser();
     });
 }
 
 /**
- * @function getRoles
+ * @function viewRoles
  * Query 'role' data and present a table with the job title, role id, the department that role belongs to, and the salary for that role
  */
-function getRoles() {
+function viewRoles() {
+    // Build a query string to join the 'role' and 'department' tables where role.department_id = department.id
     const query = 
     `
         SELECT r.id, r.title, d.name AS department, r.salary
@@ -100,23 +106,24 @@ function getRoles() {
         ON r.department_id = d.id
     `;
 
+    // Run the query and present the data to the user in a table
     db.query(query, (err, res) => {
-        err ? console.log(err) : console.table(res);
-        console.log('\n');
+        if (err) throw err;
+
+        console.table(res);
         promptUser();
     });
 }
 
 /**
- * @function getEmployees
+ * @function viewEmployees
  * Query 'employee' data and present a table including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
  */
-function getEmployees() {
-    /**
-     * Build the query to join the 'employee', 'role', and 'department' tables where: 
-     * employee.role_id = role.id
-     * role.department_id = department.id
-     * manager.id = employee.manager_id
+function viewEmployees() {
+    /* Build a query string to join the 'employee', 'role', and 'department' tables where: 
+     *  employee.role_id = role.id
+     *  role.department_id = department.id
+     *  manager.id = employee.manager_id
      */
     const query = 
     `
@@ -130,9 +137,11 @@ function getEmployees() {
         ON m.id = e.manager_id
     `;
 
+    // Run the query and present the data to the user in a table
     db.query(query, (err, res) => {
-        err ? console.log(err) : console.table(res);
-        console.log('\n');
+        if (err) throw err;
+        
+        console.table(res);
         promptUser();
     });
 }
