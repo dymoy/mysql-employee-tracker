@@ -62,6 +62,9 @@ async function promptUser() {
             case 'Add an employee':
                 addEmployee();
                 break;
+            case 'Update an employee role':
+                updateEmployeeRole();
+                break;
             case 'Exit':
                 db.end();
                 console.info('Closing connection with the database... Done! Goodbye.');
@@ -303,10 +306,11 @@ function employeePrompt(res) {
                 }
             });
             
-            // Find the requested manager to retrieve the manager employee id
             if (manager == 'None') {
+                // If the user selected 'None', the added employee will have 'null' as their manager
                 manager = null;
             } else {
+                // else, find the employee object to retrieve the id to enter as manager_id
                 manager = result.find(employee => {
                     if (employee.name == manager) {
                         return employee;
@@ -315,7 +319,7 @@ function employeePrompt(res) {
                 manager = manager.id;
             }
 
-            // Build the query using the inquirer answer provided 
+            // Build the query string using the inquirer answer provided 
             var query = 
             `
                 INSERT INTO employee (first_name, last_name, role_id, manager_id)
@@ -332,6 +336,76 @@ function employeePrompt(res) {
                 err ? console.log(err) : console.log(`And... done! The employee '${first} ${last}' was added to the database!`);
                 console.log('\n');
                 promptUser();
+            });
+        });
+    });
+}
+
+/**
+ * @function updateEmployeeRole
+ * Prompts the user to select an employee to update and their new role and this information is updated in the database
+ */
+function updateEmployeeRole() {
+    var empQuery = `SELECT * FROM employee`;
+    var roleQuery = `SELECT * FROM role`;
+
+    // Query the db for the list of available employees
+    db.query(empQuery, (err, employeeData)=> {
+        if (err) throw err;
+        
+        // Query the db for the list of available roles
+        db.query(roleQuery, (err, roleData) => {
+            if (err) throw err;
+            
+            // Map an array of employee name choices and role title choices for Inquirer 
+            var empChoices = employeeData.map((emp => emp.first_name + ' ' + emp.last_name));
+            var roleChoices = roleData.map(role => role.title);
+
+            // Use inquirer to ask user which employee they'd like to update, then to what role
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'employee',
+                    message: 'Which employee\'s role do you want to update?',
+                    choices: empChoices
+                },
+                {
+                    type: 'list',
+                    name: 'role',
+                    message: 'Okay! Which role do you want to assign to the selected employee?',
+                    choices: roleChoices
+                }
+            ]).then(answer => {
+                // Find the target employee object to retrieve the employee id 
+                const targetEmp = employeeData.find(empObj => {
+                    const empObjName = `${empObj.first_name} ${empObj.last_name}`;
+                
+                    if (empObjName == answer.employee) {
+                        return empObj;
+                    }
+                });
+
+                // Find the target role object to retrieve the role id
+                const targetRole = roleData.find(roleObj => {
+                    if (roleObj.title == answer.role) {
+                        return roleObj;
+                    }
+                });
+                
+                // Build the query string using targetEmp.id and targetRole.id
+                const query = 
+                `
+                    UPDATE employee
+                    SET role_id = ${targetRole.id}
+                    WHERE id = ${targetEmp.id}
+                `;
+
+                // Run the query to update the role_id of the employee with employee_id
+                db.query(query, (err, res) => {
+                    err ? console.log(err) : console.log(`And... done! The role for the employee '${answer.employee}' was changed to '${answer.role}'!`);
+                    console.log('\n');
+                    promptUser();
+                });
             });
         });
     });
