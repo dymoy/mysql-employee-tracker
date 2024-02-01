@@ -30,6 +30,7 @@ This application supports the following functionalities:
 
 ## Walkthrough Video
 
+Click the following link to view a walkthrough video on the usage of the application: [Walkthrough Video: MySQL Employee Tracker](https://drive.google.com/file/d/17ic6iFgpC2NW9aDnAj3QiKI-5RD0ezqi/view?usp=sharing)  
   
 ## Installation 
 

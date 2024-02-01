@@ -72,7 +72,7 @@ async function promptUser() {
                 break;
             case 'Exit':
                 db.end();
-                console.info('Closing connection with the database... Done! Goodbye\n');
+                console.info('Closing connection with the database... Done! Goodbye.\n');
                 break;
         }
     });
